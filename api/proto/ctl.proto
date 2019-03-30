@@ -1,0 +1,17 @@
+syntax = "proto3";
+
+package loko.metro.api;
+option go_package = "github.com/lokomotes/metro/api";
+
+import "common.proto";
+
+service Ctl {
+    rpc Start (StartRequest) returns (Response) {};
+    rpc Load (LoadRequest) returns (Response) {};
+}
+
+message LoadRequest {
+    // required(image)
+    Station station = 2;
+    string userID = 3;
+}
