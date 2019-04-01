@@ -69,7 +69,7 @@ func createNodeJS(opt *Option) error {
 	defer cli.ContainerRemove(ctx, cRes.ID, types.ContainerRemoveOptions{})
 
 	err = cli.CopyToContainer(
-		ctx, cRes.ID, "/usr/src/app/app", content, types.CopyToContainerOptions{})
+		ctx, cRes.ID, "/usr/station/dist/app", content, types.CopyToContainerOptions{})
 	if err != nil {
 		return err
 	}

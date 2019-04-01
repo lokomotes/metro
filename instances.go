@@ -55,8 +55,8 @@ func createInstance(image string) (string, error) {
 	res, err := DckrCli.ContainerCreate(context.Background(), &container.Config{
 		Image: image,
 		Env: []string{
-			"LOCO_METRO_SERVER_HOST=" + metroContName,
-			"LOCO_METRO_SERVER_PORT=" + strconv.Itoa(int(serveOpts.Port)),
+			"LOKO_METRO_HOST=" + metroContName,
+			"LOKO_METRO_PORT=" + strconv.Itoa(int(serveOpts.Port)),
 		},
 	}, &container.HostConfig{
 		NetworkMode: metroContNetMode,

@@ -111,7 +111,7 @@ func (opt *Option) resolve() error {
 	// the station image is pulled if it is not exists locally
 	//
 	if id, err := getIdentifierOfRuntime(opt.Runtime); err == nil {
-		opt.stRepo = "lokomotes/metro-station-" + id + opt.RuntimeVersion
+		opt.stRepo = "lokomotes/station-" + id // + opt.RuntimeVersion
 	} else {
 		return err
 	}
@@ -192,7 +192,7 @@ func getDefaultVersionOfRuntime(runtime Runtime) (string, error) {
 		return "", errors.New("unexpected runtime identifier")
 
 	case NodeJS:
-		return "8", nil
+		return "10", nil
 
 	case Golang:
 		return "1.11", nil
