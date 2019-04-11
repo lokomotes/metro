@@ -23,6 +23,7 @@ const (
 	NodeJS
 	// Golang is an identifier for Golang.
 	Golang
+	DotNet
 )
 
 // Option holds options to create Metro activity image.
@@ -79,7 +80,7 @@ func (opt *Option) resolve() error {
 	// tagging "latest" by default if it is not tagged
 	//
 	if len(opt.OutRepo) == 0 {
-		opt.OutRepo = filepath.Base(opt.SrcPath)
+		opt.OutRepo = strings.ToLower(filepath.Base(opt.SrcPath))
 
 		if !opt.isDir {
 			opt.OutRepo = strings.TrimSuffix(opt.OutRepo, filepath.Ext(opt.OutRepo))
@@ -96,6 +97,7 @@ func (opt *Option) resolve() error {
 	// set RuntimeVersion if it is not specified
 	// default value can be seen `getDefaultVersionOfRuntime`
 	//
+	// deprecated
 	if len(opt.RuntimeVersion) == 0 {
 		v, err := getDefaultVersionOfRuntime(opt.Runtime)
 		if err != nil {
@@ -164,6 +166,9 @@ func resolveRuntime(filename string) (Runtime, error) {
 		fallthrough
 	case "go":
 		rst = Golang
+
+	case "cs":
+		rst = DotNet
 	}
 
 	if rst == Auto {
@@ -179,13 +184,17 @@ func getIdentifierOfRuntime(runtime Runtime) (string, error) {
 		return "", errors.New("unexpected runtime identifier")
 
 	case NodeJS:
-		return "node", nil
+		return "nodejs", nil
 
 	case Golang:
 		return "go", nil
+
+	case DotNet:
+		return "dotnet", nil
 	}
 }
 
+// deprecated
 func getDefaultVersionOfRuntime(runtime Runtime) (string, error) {
 	switch runtime {
 	default:
@@ -196,6 +205,9 @@ func getDefaultVersionOfRuntime(runtime Runtime) (string, error) {
 
 	case Golang:
 		return "1.11", nil
+
+	case DotNet:
+		return "qwer", nil
 	}
 }
 

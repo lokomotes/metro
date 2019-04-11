@@ -2,6 +2,7 @@ package create
 
 import (
 	"context"
+	"errors"
 	"io/ioutil"
 	"os"
 	"path"
@@ -10,23 +11,16 @@ import (
 	"github.com/docker/docker/api/types/container"
 )
 
-func createNodeJS(opt *Option) error {
+func createDotNet(opt *Option) error {
 	var (
 		src []string
 	)
 
 	//
-	// collecting source(s)
+	// collecting srource(s)
 	//
 	if opt.isDir {
-		fs, err := ioutil.ReadDir(opt.SrcPath)
-		if err != nil {
-			return err
-		}
-
-		for _, f := range fs {
-			src = append(src, path.Join(opt.SrcPath, f.Name()))
-		}
+		return errors.New("Not implemented")
 	} else {
 		tmp, err := ioutil.TempDir("", "")
 		if err != nil {
@@ -34,7 +28,7 @@ func createNodeJS(opt *Option) error {
 		}
 		defer os.RemoveAll(tmp)
 
-		dst := path.Join(tmp, "main.js")
+		dst := path.Join(tmp, "Program.cs")
 		cp(opt.SrcPath, dst)
 
 		src = append(src, dst)
@@ -69,7 +63,7 @@ func createNodeJS(opt *Option) error {
 	defer cli.ContainerRemove(ctx, cRes.ID, types.ContainerRemoveOptions{})
 
 	err = cli.CopyToContainer(
-		ctx, cRes.ID, "/usr/station/app", content, types.CopyToContainerOptions{})
+		ctx, cRes.ID, "/usr/station/App", content, types.CopyToContainerOptions{})
 	if err != nil {
 		return err
 	}
