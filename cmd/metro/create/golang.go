@@ -13,7 +13,7 @@ import (
 	"github.com/docker/docker/api/types"
 )
 
-const createGoalngDockerfile = `
+const golangDockerfile = `
 COPY . /go/.
 RUN /bin/sh /go/create.sh `
 
@@ -39,7 +39,7 @@ func createGolang(opt *Option) error {
 	if tmp, err := ioutil.TempFile("", ""); err == nil {
 		p := tmp.Name()
 		defer os.Remove(p)
-		tmp.WriteString("FROM " + opt.stRepo + createGoalngDockerfile + usrPkg)
+		tmp.WriteString("FROM " + opt.stRepo + golangDockerfile + usrPkg)
 		dockerfile = filepath.Base(p)
 
 		src = append(src, p)

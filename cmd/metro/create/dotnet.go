@@ -2,25 +2,51 @@ package create
 
 import (
 	"context"
-	"errors"
+	"io"
 	"io/ioutil"
 	"os"
 	"path"
+	"path/filepath"
 
 	"github.com/docker/docker/api/types"
-	"github.com/docker/docker/api/types/container"
 )
+
+const dotnetDockerfile = `
+COPY . /usr/station/App/.
+RUN /bin/sh /usr/station/create.sh`
 
 func createDotNet(opt *Option) error {
 	var (
-		src []string
+		src        []string
+		dockerfile string
 	)
 
 	//
-	// collecting srource(s)
+	// add Dockerfile
+	//
+	if tmp, err := ioutil.TempFile("", ""); err == nil {
+		p := tmp.Name()
+		defer os.Remove(p)
+		tmp.WriteString("FROM " + opt.stRepo + dotnetDockerfile)
+		dockerfile = filepath.Base(p)
+
+		src = append(src, p)
+	} else {
+		return err
+	}
+
+	//
+	// collecting source(s)
 	//
 	if opt.isDir {
-		return errors.New("Not implemented")
+		fs, err := ioutil.ReadDir(opt.SrcPath)
+		if err != nil {
+			return err
+		}
+
+		for _, f := range fs {
+			src = append(src, path.Join(opt.SrcPath, f.Name()))
+		}
 	} else {
 		tmp, err := ioutil.TempDir("", "")
 		if err != nil {
@@ -54,26 +80,17 @@ func createDotNet(opt *Option) error {
 
 	ctx := context.Background()
 
-	cRes, err := cli.ContainerCreate(ctx, &container.Config{
-		Image: opt.stRepo,
-	}, nil, nil, "")
-	if err != nil {
-		return err
-	}
-	defer cli.ContainerRemove(ctx, cRes.ID, types.ContainerRemoveOptions{})
-
-	err = cli.CopyToContainer(
-		ctx, cRes.ID, "/usr/station/App", content, types.CopyToContainerOptions{})
-	if err != nil {
-		return err
-	}
-
-	_, err = cli.ContainerCommit(ctx, cRes.ID, types.ContainerCommitOptions{
-		Reference: opt.OutRepo,
+	bRes, err := cli.ImageBuild(ctx, content, types.ImageBuildOptions{
+		Tags:       []string{opt.OutRepo},
+		Dockerfile: dockerfile,
+		Remove:     true,
 	})
 	if err != nil {
 		return err
 	}
+	defer bRes.Body.Close()
+
+	io.Copy(os.Stdout, bRes.Body)
 
 	return nil
 }

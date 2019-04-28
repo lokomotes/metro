@@ -9,6 +9,8 @@ import (
 
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
+	mounttypes "github.com/docker/docker/api/types/mount"
+	volumetypes "github.com/docker/docker/api/types/volume"
 )
 
 type token api.Token
@@ -51,25 +53,34 @@ func (desc *instDesc) getBody() (instBody, bool) {
 	return body, ok
 }
 
-func createInstance(image string) (string, error) {
+// user ID 넘겨주고 없으면 volume 만들어서 마운트?
+func (desc *instDesc) createInstance() (string, error) {
+	if _, err := DckrCli.VolumeInspect(context.Background(), desc.userID); err != nil {
+		DckrCli.VolumeCreate(context.Background(), volumetypes.VolumeCreateBody{
+			Name: desc.userID,
+		})
+	}
+
 	res, err := DckrCli.ContainerCreate(context.Background(), &container.Config{
-		Image: image,
+		Image: desc.image,
 		Env: []string{
 			"LOKO_METRO_HOST=" + metroContName,
 			"LOKO_METRO_PORT=" + strconv.Itoa(int(serveOpts.Port)),
 		},
 	}, &container.HostConfig{
 		NetworkMode: metroContNetMode,
+		Mounts: []mounttypes.Mount{
+			mounttypes.Mount{
+				Type:   mounttypes.TypeVolume,
+				Source: desc.userID,
+				Target: "/usr/cargo",
+			},
+		},
 	}, nil, "")
 
 	if err != nil {
 		return "", err
 	}
-
-	// err = DckrCli.ContainerStart(
-	// 	context.Background(), res.ID,
-	// 	types.ContainerStartOptions{},
-	// )
 
 	return res.ID, err
 }
@@ -103,7 +114,7 @@ func newInstance(desc *instDesc, sig *api.Signal) error {
 
 	pool[desc.image] = instBody{transmit: tc}
 
-	contID, err := createInstance(desc.image)
+	contID, err := desc.createInstance()
 
 	if err != nil {
 		delete(pool, desc.image)
